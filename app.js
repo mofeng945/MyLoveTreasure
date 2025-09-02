@@ -72,7 +72,7 @@ const settingsTab = document.getElementById('settings-tab');
 const settings = {
   themeColor: '#16a34a',
   isDarkMode: false,
-  buttonStyle: 'default',
+  buttonStyle: 'rounded',
   bgType: 'solid',
   bgColor: '#f8fafc',
   bgImage: ''
@@ -396,7 +396,7 @@ function applyButtonStyle() {
 // 重置设置
 function resetSettings() {
   settings.themeColor = '#16a34a';
-  settings.buttonStyle = 'default';
+  settings.buttonStyle = 'rounded';
   settings.bgType = 'color';
   settings.bgColor = '#f8fafc';
   settings.bgImage = '';

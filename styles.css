@@ -24,6 +24,7 @@
     
     main {
         padding: 10px;
+        padding-bottom: var(--mobile-nav-height);
     }
     
     .ledger-selector {
@@ -82,22 +83,27 @@
     }
 }
 
-/* CSS变量定义主题色 */
 :root {
-    --primary-color: #16a34a;
-    --primary-light: #4ade80;
-    --primary-dark: #15803d;
-    --primary-hover: #15803d; /* 添加主色悬停变量 */
-    --secondary-color: #475569;
-    --secondary-text: #64748b; /* 添加次要文本颜色变量 */
-    --bg-color: #f8fafc;
-    --text-color: #334155;
-    --border-color: #e2e8f0;
-    --hover-color: #f1f5f9;
-    --hover-bg: #f1f5f9; /* 添加悬停背景变量 */
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
-    --error-color: #ef4444;
+    --primary-color: #4a6fa5;
+    --primary-color-rgb: 74, 111, 165;
+    --primary-light: #6b8aac;
+    --primary-dark: #3a5a85;
+    --primary-hover: #15803d;
+    --secondary-color: #d4e0f7;
+    --secondary-text: #64748b;
+    --bg-color: #f5f5f5;
+    --text-color: #333;
+    --border-color: #ddd;
+    --hover-color: #e0e0e0;
+    --hover-bg: #f1f5f9;
+    --success-color: #4caf50;
+    --danger-color: #f44336;
+    --warning-color: #ff9800;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-mobile: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    --border-radius: 5px;
+    --border-radius-mobile: 8px;
+    --mobile-nav-height: 60px;
 }
 
 body {
@@ -516,6 +522,89 @@ header {
     gap: 10px;
 }
 
+/* 移动端返回按钮 */
+.back-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-mobile);
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+}
+
+.back-button:hover {
+    background-color: var(--primary-dark);
+}
+
+/* 移动端底部导航栏 */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: var(--mobile-nav-height);
+    background-color: white;
+    box-shadow: var(--shadow-mobile);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--secondary-text);
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.mobile-tab-btn.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+/* 为移动端调整主内容区的底部内边距 */
+main {
+    padding-bottom: 0;
+}
+
+/* 移动端触摸优化 */
+input[type="button"], input[type="submit"], input[type="reset"], button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* 移动端表单元素优化 */
+input, select, textarea {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* 防止移动端点击延迟 */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
 #current-ledger-name {
     font-size: 14px;
     color: var(--text-color);
@@ -799,6 +888,17 @@ header {
 
 .button-style-option input[type="radio"] {
     cursor: pointer;
+}
+
+.button-style-option input[type="radio"]:checked {
+    accent-color: var(--primary-color);
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.button-style-option:has(input[type="radio"]:checked) {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border: 1px solid var(--primary-color);
 }
 
 /* 重置按钮样式 */

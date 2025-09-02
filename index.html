@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4a6fa5">
     <meta name="description" content="一个简单易用的记账应用，支持离线使用和数据本地同步">
+    <meta name="format-detection" content="telephone=no">
     <link rel="manifest" href="manifest.json">
     <title>简易记账本</title>
     <link rel="stylesheet" href="styles.css">
@@ -21,13 +22,16 @@
         </div>
     </header>
     <main>
-        <!-- 标签页导航 -->
-        <div class="tabs">
+        <!-- 顶部导航栏 - 桌面端 -->
+        <div class="tabs desktop-tabs">
             <button class="tab-btn active" data-tab="input">记账</button>
             <button class="tab-btn" data-tab="calendar">日历</button>
             <button class="tab-btn" data-tab="records">记录</button>
             <button class="tab-btn" data-tab="settings">设置</button>
         </div>
+        
+        <!-- 移动端返回按钮 -->
+        <button id="back-button" class="back-button" style="display: none;">← 返回</button>
         
         <!-- 记账标签页 -->
         <div id="input-tab" class="tab-content active">
@@ -230,7 +234,27 @@
         </div>
     </main>
     
-    <footer>
+    <!-- 移动端底部导航栏 -->
+    <div class="mobile-bottom-nav">
+        <button class="mobile-tab-btn active" data-tab="input">
+            <span class="nav-icon">💰</span>
+            <span>记账</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="calendar">
+            <span class="nav-icon">📅</span>
+            <span>日历</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="records">
+            <span class="nav-icon">📋</span>
+            <span>记录</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="settings">
+            <span class="nav-icon">⚙️</span>
+            <span>设置</span>
+        </button>
+    </div>
+    
+    <footer class="desktop-footer">
         <p>简易记账本 &copy; 2023</p>
     </footer>
     
@@ -248,6 +272,86 @@
                     });
             });
         }
+        
+        // 移动端优化代码
+        document.addEventListener('DOMContentLoaded', function() {
+            // 处理窗口大小变化，切换导航样式
+            function handleResize() {
+                const isMobile = window.innerWidth < 768;
+                const desktopTabs = document.querySelector('.desktop-tabs');
+                const mobileNav = document.querySelector('.mobile-bottom-nav');
+                const backButton = document.getElementById('back-button');
+                const footer = document.querySelector('.desktop-footer');
+                
+                if (isMobile) {
+                    if (desktopTabs) desktopTabs.style.display = 'none';
+                    if (mobileNav) mobileNav.style.display = 'flex';
+                    if (backButton) backButton.style.display = 'block';
+                    if (footer) footer.style.display = 'none';
+                } else {
+                    if (desktopTabs) desktopTabs.style.display = 'flex';
+                    if (mobileNav) mobileNav.style.display = 'none';
+                    if (backButton) backButton.style.display = 'none';
+                    if (footer) footer.style.display = 'block';
+                }
+            }
+            
+            // 初始化调用一次
+            handleResize();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', handleResize);
+            
+            // 返回按钮点击事件
+            const backButton = document.getElementById('back-button');
+            if (backButton) {
+                backButton.addEventListener('click', function() {
+                    // 在移动设备上返回上一个操作或页面
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        // 如果没有历史记录，可以切换到默认标签页
+                        const defaultTab = document.querySelector('.mobile-tab-btn[data-tab="input"]');
+                        if (defaultTab) {
+                            defaultTab.click();
+                        }
+                    }
+                });
+            }
+            
+            // 移动端标签页点击事件
+            const mobileTabButtons = document.querySelectorAll('.mobile-tab-btn');
+            mobileTabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // 移除所有激活状态
+                    mobileTabButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // 添加当前激活状态
+                    this.classList.add('active');
+                    
+                    // 触发对应桌面端标签页的点击事件
+                    const desktopTab = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+                    if (desktopTab) {
+                        desktopTab.click();
+                    }
+                });
+            });
+            
+            // 优化移动端触摸事件，减少延迟
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // 禁止iOS上的双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        });
     </script>
 </body>
 </html>
