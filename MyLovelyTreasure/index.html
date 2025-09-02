@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4a6fa5">
+    <meta name="description" content="一个简单易用的记账应用，支持离线使用和数据本地同步">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.json">
+    <title>简易记账本</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>简易记账本</h1>
+        <div class="ledger-selector">
+            <span id="current-ledger-name">默认账本</span>
+            <div class="ledger-dropdown">
+                <select id="ledger-select"></select>
+                <button id="add-ledger-btn" class="add-ledger-btn">+</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <!-- 顶部导航栏 - 桌面端 -->
+        <div class="tabs desktop-tabs">
+            <button class="tab-btn active" data-tab="input">记账</button>
+            <button class="tab-btn" data-tab="calendar">日历</button>
+            <button class="tab-btn" data-tab="records">记录</button>
+            <button class="tab-btn" data-tab="settings">设置</button>
+        </div>
+        
+        <!-- 移动端返回按钮 -->
+        <button id="back-button" class="back-button" style="display: none;">← 返回</button>
+        
+        <!-- 记账标签页 -->
+        <div id="input-tab" class="tab-content active">
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="amount">金额:</label>
+                    <input type="number" id="amount" placeholder="请输入金额">
+                </div>
+                <div class="input-group">
+                    <label for="main-category">一级分类:</label>
+                    <select id="main-category">
+                        <!-- 分类会根据收支类型动态填充 -->
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="sub-category">二级分类:</label>
+                    <select id="sub-category">
+                        <option value="">请先选择一级分类</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="date">日期:</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="input-group">
+                    <label for="description">备注:</label>
+                    <div class="description-container">
+                        <textarea id="description" placeholder="添加备注（可选）" rows="3"></textarea>
+                        <button id="add-image" class="add-image-btn">插入图片</button>
+                    </div>
+                    <div id="image-preview" class="image-preview"></div>
+                </div>
+                <div class="input-group">
+                    <label for="type">类型:</label>
+                    <div class="type-buttons">
+                        <button id="expense" class="type-btn active">支出</button>
+                        <button id="income" class="type-btn">收入</button>
+                    </div>
+                </div>
+                <button id="add-record">添加记录</button>
+            </section>
+            
+            <section class="summary-section">
+                <div class="summary-card">
+                    <h3>总收入</h3>
+                    <p id="total-income">¥0.00</p>
+                </div>
+                <div class="summary-card">
+                    <h3>总支出</h3>
+                    <p id="total-expense">¥0.00</p>
+                </div>
+                <div class="summary-card">
+                    <h3>结余</h3>
+                    <p id="balance">¥0.00</p>
+                </div>
+            </section>
+        </div>
+        
+        <!-- 日历标签页 -->
+        <div id="calendar-tab" class="tab-content">
+            <section class="calendar-section">
+                <div class="calendar-header">
+                    <button id="prev-month">←</button>
+                    <h2 id="current-month"></h2>
+                    <button id="next-month">→</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekdays">
+                        <div>日</div>
+                        <div>一</div>
+                        <div>二</div>
+                        <div>三</div>
+                        <div>四</div>
+                        <div>五</div>
+                        <div>六</div>
+                    </div>
+                    <div id="calendar-days" class="calendar-days"></div>
+                </div>
+                <div id="calendar-records" class="calendar-records">
+                    <h3>当日记录</h3>
+                    <div id="selected-day-records"></div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- 记录标签页 -->
+        <div id="records-tab" class="tab-content">
+            <section class="records-section">
+                <h2>收支记录</h2>
+                <div class="filter-section">
+                    <div class="input-group">
+                        <label for="filter-type">类型:</label>
+                        <select id="filter-type">
+                            <option value="all">全部</option>
+                            <option value="expense">支出</option>
+                            <option value="income">收入</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter-main-category">一级分类:</label>
+                        <select id="filter-main-category">
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter-sub-category">二级分类:</label>
+                        <select id="filter-sub-category">
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <button id="clear-filter" class="clear-filter-btn">清空筛选</button>
+                </div>
+                <div id="records-list"></div>
+            </section>
+        </div>
+        
+        <!-- 设置标签页 -->
+        <div id="settings-tab" class="tab-content">
+            <section class="settings-section">
+                <h2>个性化设置</h2>
+                
+                <!-- 主题色设置 -->
+                <div class="setting-group">
+                    <h3>主题色</h3>
+                    <div class="theme-colors">
+                        <button class="color-option" data-color="#4a6fa5" style="background-color: #4a6fa5;"></button>
+                        <button class="color-option" data-color="#2196f3" style="background-color: #2196f3;"></button>
+                        <button class="color-option" data-color="#4caf50" style="background-color: #4caf50;"></button>
+                        <button class="color-option" data-color="#ff9800" style="background-color: #ff9800;"></button>
+                        <button class="color-option" data-color="#f44336" style="background-color: #f44336;"></button>
+                        <button class="color-option" data-color="#9c27b0" style="background-color: #9c27b0;"></button>
+                    </div>
+                    <div class="input-group">
+                        <label for="custom-color">自定义颜色:</label>
+                        <input type="color" id="custom-color" value="#4a6fa5">
+                    </div>
+                </div>
+                
+                <!-- 背景设置 -->
+                <div class="setting-group">
+                    <h3>背景设置</h3>
+                    <div class="input-group">
+                        <label for="bg-type">背景类型:</label>
+                        <select id="bg-type">
+                            <option value="color">纯色背景</option>
+                            <option value="image">图片背景</option>
+                        </select>
+                    </div>
+                    <div id="bg-color-group" class="input-group">
+                        <label for="bg-color">背景颜色:</label>
+                        <input type="color" id="bg-color" value="#f5f5f5">
+                    </div>
+                    <div id="bg-image-group" class="input-group" style="display: none;">
+                        <label for="bg-image">上传背景图片:</label>
+                        <input type="file" id="bg-image" accept="image/*">
+                        <button id="remove-bg-image" class="remove-bg-btn">移除背景图片</button>
+                    </div>
+                </div>
+                
+                <!-- 按钮样式设置 -->
+                <div class="setting-group">
+                    <h3>按钮样式</h3>
+                    <div class="button-styles">
+                        <label class="style-option">
+                            <input type="radio" name="button-style" value="default" checked>
+                            <span>默认样式</span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="button-style" value="rounded">
+                            <span>圆角样式</span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="button-style" value="shadow">
+                            <span>阴影样式</span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="button-style" value="flat">
+                            <span>扁平样式</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 账本管理 -->
+                <div class="setting-group">
+                    <h3>账本管理</h3>
+                    <div class="ledger-management">
+                        <div class="input-group">
+                            <label for="new-ledger-name">新建账本:</label>
+                            <input type="text" id="new-ledger-name" placeholder="请输入账本名称">
+                            <button id="create-ledger-btn" class="create-ledger-btn">创建</button>
+                        </div>
+                        <div id="ledgers-list" class="ledgers-list">
+                            <!-- 账本列表会动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="reset-settings" class="reset-settings-btn">重置为默认设置</button>
+            </section>
+        </div>
+    </main>
+    
+    <!-- 移动端底部导航栏 -->
+    <div class="mobile-bottom-nav">
+        <button class="mobile-tab-btn active" data-tab="input">
+            <span class="nav-icon">💰</span>
+            <span>记账</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="calendar">
+            <span class="nav-icon">📅</span>
+            <span>日历</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="records">
+            <span class="nav-icon">📋</span>
+            <span>记录</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="settings">
+            <span class="nav-icon">⚙️</span>
+            <span>设置</span>
+        </button>
+    </div>
+    
+    <footer class="desktop-footer">
+        <p>简易记账本 &copy; 2023</p>
+    </footer>
+    
+    <script src="app.js"></script>
+    <script>
+        // 注册Service Worker以支持离线功能
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker 注册成功:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker 注册失败:', error);
+                    });
+            });
+        }
+        
+        // 全局变量用于存储当前设备类型
+        let isMobileDevice = false;
+        
+        // 移动端优化代码
+        document.addEventListener('DOMContentLoaded', function() {
+            // 优先检测用户设备类型（组合多种检测方法）
+            function detectDeviceType() {
+                // 基于窗口宽度的检测
+                const widthBased = window.innerWidth < 768;
+                
+                // 基于用户代理的检测
+                const agentBased = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                // 基于触摸能力的检测
+                const touchBased = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                
+                // 综合判断
+                isMobileDevice = widthBased || (agentBased && touchBased);
+                return isMobileDevice;
+            }
+            
+            // 处理窗口大小变化和设备类型切换
+            function handleResize() {
+                const isMobile = detectDeviceType();
+                const desktopTabs = document.querySelector('.desktop-tabs');
+                const mobileNav = document.querySelector('.mobile-bottom-nav');
+                const backButton = document.getElementById('back-button');
+                const footer = document.querySelector('.desktop-footer');
+                
+                if (isMobile) {
+                    if (desktopTabs) desktopTabs.style.display = 'none';
+                    if (mobileNav) mobileNav.style.display = 'flex';
+                    if (backButton) backButton.style.display = 'block';
+                    if (footer) footer.style.display = 'none';
+                } else {
+                    if (desktopTabs) desktopTabs.style.display = 'flex';
+                    if (mobileNav) mobileNav.style.display = 'none';
+                    if (backButton) backButton.style.display = 'none';
+                    if (footer) footer.style.display = 'block';
+                }
+                
+                // 如果窗口大小改变时已经加载了app.js，重新初始化移动端交互
+                if (window.app && typeof window.app.reinitMobileUI === 'function') {
+                    window.app.reinitMobileUI(isMobile);
+                }
+            }
+            
+            // 初始化调用一次
+            handleResize();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', handleResize);
+            
+            // 返回按钮点击事件 - 优化移动设备体验
+            const backButton = document.getElementById('back-button');
+            if (backButton) {
+                backButton.addEventListener('click', function() {
+                    // 在移动设备上返回上一个操作或页面
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        // 如果没有历史记录，可以切换到默认标签页
+                        const defaultTab = document.querySelector('.mobile-tab-btn[data-tab="input"]');
+                        if (defaultTab) {
+                            defaultTab.click();
+                        }
+                    }
+                });
+                
+                // 为移动设备添加触摸事件支持
+                backButton.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    this.classList.add('active');
+                });
+                
+                backButton.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('active');
+                    this.click();
+                });
+            }
+            
+            // 移动端标签页点击事件 - 优化交互
+            function setupMobileTabButtons() {
+                const mobileTabButtons = document.querySelectorAll('.mobile-tab-btn');
+                mobileTabButtons.forEach(button => {
+                    // 移除旧的事件监听器，避免重复绑定
+                    const newButton = button.cloneNode(true);
+                    button.parentNode.replaceChild(newButton, button);
+                    
+                    // 添加新的点击事件
+                    newButton.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        
+                        // 移除所有激活状态
+                        mobileTabButtons.forEach(btn => btn.classList.remove('active'));
+                        
+                        // 添加当前激活状态
+                        this.classList.add('active');
+                        
+                        // 触发对应桌面端标签页的点击事件
+                        const desktopTab = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+                        if (desktopTab && typeof desktopTab.click === 'function') {
+                            // 使用setTimeout确保DOM已经更新
+                            setTimeout(() => {
+                                desktopTab.click();
+                            }, 50);
+                        }
+                    });
+                    
+                    // 为移动设备添加触摸事件支持
+                    newButton.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        this.classList.add('touch-active');
+                    });
+                    
+                    newButton.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('touch-active');
+                        this.click();
+                    });
+                });
+            }
+            
+            // 初始化移动端标签按钮
+            setupMobileTabButtons();
+            
+            // 优化移动端触摸事件，减少延迟
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            
+            // 禁止iOS上的双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        });
+    </script>
+</body>
+</html>
